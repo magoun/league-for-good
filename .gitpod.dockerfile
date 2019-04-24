@@ -1,5 +1,7 @@
 FROM buildpack-deps:cosmic
 
+USER root
+
 # remove interactive install prompts
 ENV DEBIAN_FRONTEND=noninteractive
 
@@ -98,8 +100,11 @@ COPY docker-entrypoint.sh /usr/local/bin/
 ENTRYPOINT ["docker-entrypoint.sh"]
 
 EXPOSE 27017
+USER mongodb
 CMD ["mongod"]
 # end from mongo
+
+USER root
 
 # from gitpod/workspace-full
 ### base ###
