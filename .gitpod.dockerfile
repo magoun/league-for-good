@@ -43,27 +43,6 @@ RUN curl -fsSL https://dl.yarnpkg.com/debian/pubkey.gpg | apt-key add - \
     && apt-get install --no-install-recommends -yq yarn=1.12.3-1 \
     && apt-get clean && rm -rf /var/lib/apt/lists/* /tmp/*
 
-### Gitpod user (2) ###
-USER gitpod
-# use sudo so that user does not get sudo usage info on (the first) login
-RUN sudo echo "Running 'sudo' for Gitpod: success"
-
-### Go removed ###
-
-### Node.js ###
-ARG NODE_VERSION=8.14.0
-ENV PATH=/home/gitpod/.nvm/versions/node/v8.14.0/bin:$PATH
-RUN curl -fsSL https://raw.githubusercontent.com/creationix/nvm/v0.33.11/install.sh | bash \
-    && bash -c ". .nvm/nvm.sh \
-        && npm config set python /usr/bin/python --global \
-        && npm config set python /usr/bin/python \
-        && npm install -g typescript \
-        && npm install -g js-yaml"
-
-### Python removed ###
-### Ruby removed ###
-### Rust removed ###
-
 # remove interactive install prompts
 ENV DEBIAN_FRONTEND=noninteractive
 
@@ -108,12 +87,33 @@ RUN set -x \
 RUN mkdir -p /data/db /data/configdb \
 	&& chown -R gitpod:gitpod /data/db /data/configdb
 
-EXPOSE 27017
-CMD ["mongod"]
-# end from mongo
+### Gitpod user (2) ###
+USER gitpod
+# use sudo so that user does not get sudo usage info on (the first) login
+RUN sudo echo "Running 'sudo' for Gitpod: success"
+
+### Go removed ###
+
+### Node.js ###
+ARG NODE_VERSION=8.14.0
+ENV PATH=/home/gitpod/.nvm/versions/node/v8.14.0/bin:$PATH
+RUN curl -fsSL https://raw.githubusercontent.com/creationix/nvm/v0.33.11/install.sh | bash \
+    && bash -c ". .nvm/nvm.sh \
+        && npm config set python /usr/bin/python --global \
+        && npm config set python /usr/bin/python \
+        && npm install -g typescript \
+        && npm install -g js-yaml"
+
+### Python removed ###
+### Ruby removed ###
+### Rust removed ###
 
 ### checks ###
 # no root-owned files in the home directory
 RUN notOwnedFile=$(find . -not "(" -user gitpod -and -group gitpod ")" -print -quit) \
     && { [ -z "$notOwnedFile" ] \
         || { echo "Error: not all files/dirs in $HOME are owned by 'gitpod' user & group"; exit 1; } }
+
+# start mongodb
+EXPOSE 27017
+CMD ["mongod"]
