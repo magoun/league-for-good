@@ -15,6 +15,7 @@ RUN yes | unminimize \
         llvm \
         locales \
         man-db \
+        mongodb \
         nano \
         software-properties-common \
         sudo \
@@ -46,44 +47,7 @@ RUN curl -fsSL https://dl.yarnpkg.com/debian/pubkey.gpg | apt-key add - \
 # remove interactive install prompts
 ENV DEBIAN_FRONTEND=noninteractive
 
-# begin from mongo
-RUN set -eux; \
-	apt-get update; \
-	apt-get install -y --no-install-recommends \
-		ca-certificates \
-		jq \
-		numactl \
-	; \
-	if ! command -v ps > /dev/null; then \
-		apt-get install -y --no-install-recommends procps; \
-	fi; \
-	rm -rf /var/lib/apt/lists/*
-
-# Allow build-time overrides (eg. to build image with MongoDB Enterprise version)
-# Options for MONGO_PACKAGE: mongodb-org OR mongodb-enterprise
-# Options for MONGO_REPO: repo.mongodb.org OR repo.mongodb.com
-# Example: docker build --build-arg MONGO_PACKAGE=mongodb-enterprise --build-arg MONGO_REPO=repo.mongodb.com .
-ARG MONGO_PACKAGE=mongodb-org-unstable
-ARG MONGO_REPO=repo.mongodb.org
-ENV MONGO_PACKAGE=${MONGO_PACKAGE} MONGO_REPO=${MONGO_REPO}
-
-ENV MONGO_MAJOR 4.1
-ENV MONGO_VERSION 4.1.10
-# bashbrew-architectures:amd64 arm64v8 s390x
-RUN echo "deb http://$MONGO_REPO/apt/ubuntu bionic/${MONGO_PACKAGE%-unstable}/$MONGO_MAJOR multiverse" | tee "/etc/apt/sources.list.d/${MONGO_PACKAGE%-unstable}.list"
-
-RUN set -x \
-	&& apt-get update \
-	&& apt-get install -y \
-		${MONGO_PACKAGE}=$MONGO_VERSION \
-		${MONGO_PACKAGE}-server=$MONGO_VERSION \
-		${MONGO_PACKAGE}-shell=$MONGO_VERSION \
-		${MONGO_PACKAGE}-mongos=$MONGO_VERSION \
-		${MONGO_PACKAGE}-tools=$MONGO_VERSION \
-	&& rm -rf /var/lib/apt/lists/* \
-	&& rm -rf /var/lib/mongodb \
-	&& mv /etc/mongod.conf /etc/mongod.conf.orig
-
+# setup mongodb for gitpod user
 RUN mkdir -p /data/db /data/configdb \
 	&& chown -R gitpod:gitpod /data/db /data/configdb
 
